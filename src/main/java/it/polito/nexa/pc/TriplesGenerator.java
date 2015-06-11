@@ -32,19 +32,24 @@ public class TriplesGenerator {
     public static void main(String[] args) throws FileNotFoundException {
 
         DefaultJSONImporter dji = new DefaultJSONImporter();
-
+        /*
         // Generate labels of proposing structures
         String psJson = dji.getJSON("src/main/resources/proposingStructures.json", "FILE");
         PropStructLabelsTriplifier pslt = new PropStructLabelsTriplifier();
-        RDFforProposingStructureLabels(pslt, psJson, createBaseModel());
+        RDFforProposingStructureLabels(pslt, psJson, createBaseModel(), "output/proposing-structures-labels.nt");
+
+        // Generate labels of general business entities
+        String beJson = dji.getJSON("src/main/resources/businessEntities.json", "FILE");
+        PropStructLabelsTriplifier belt = new PropStructLabelsTriplifier();
+        RDFforProposingStructureLabels(belt, beJson, createBaseModel(), "output/business-entities-labels.nt");
 
         // Generate sameas with SPCData
         SPCDataTriplifier st = new SPCDataTriplifier();
-        RDFforSameas(st, psJson, createBaseModel());
+        RDFforSameas(st, psJson, createBaseModel());*/
 
         // Generate public contracts data
         PublicContractsTriplifier pcTriplifier = new PublicContractsTriplifier();
-        File dir = new File("../download");
+        File dir = new File("../../download");
         Collection files = FileUtils.listFiles(dir, new RegexFileFilter("([^\\s]+(\\.(?i)(json))$)"), DirectoryFileFilter.DIRECTORY);
         System.out.println(files.size());
         Iterator itr = files.iterator();
@@ -109,11 +114,11 @@ public class TriplesGenerator {
         RDFDataMgr.write(outTurtle, model, RDFFormat.NTRIPLES);
     }
 
-    private static void RDFforProposingStructureLabels(PropStructLabelsTriplifier pslt, String inputJson, Model model) throws FileNotFoundException {
+    private static void RDFforProposingStructureLabels(PropStructLabelsTriplifier pslt, String inputJson, Model model, String output) throws FileNotFoundException {
         System.out.println("Generate labels data...");
         List<Statement> statements = pslt.triplifyJSON(inputJson);
         model.add(statements);
-        publishRDF("output/proposing-strctures-labels.nt", model);
+        publishRDF(output, model);
     }
 
     private static void RDFforTestingData(PublicContractsTriplifier pct, String inputJson, Model model) throws FileNotFoundException {

@@ -439,7 +439,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
     private List<Statement> createSingleParticipant(JsonNode value, Boolean hasNationality, Boolean isItalian, String idParticipant){
         List<Statement> results = new ArrayList<>();
 
-        if (getValue("ragioneSociale", value) != ""){
+        /*if (getValue("ragioneSociale", value) != ""){
             Statement participant = ResourceFactory.createStatement(
                     ResourceFactory.createResource(BASE_URI + "businessEntities/" +
                             cleanString(idParticipant)),
@@ -447,7 +447,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                     ResourceFactory.createLangLiteral(getValue("ragioneSociale", value),"it"));
 
             results.add(participant);
-        }
+        }*/
 
         if(isItalian) {
             Statement nationality = ResourceFactory.createStatement(
