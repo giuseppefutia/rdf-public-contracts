@@ -183,7 +183,6 @@ public class PublicContractsTriplifier implements JSONTriplifier {
         }
 
         if(getValue("sceltaContraenteOriginal", record) != "") { // This property tracks errors in the procedure type values
-            //System.out.println(getValue("sceltaContraenteOriginal", record));
             String pte = getValue("sceltaContraenteOriginal", record);
             Property pteProp = ResourceFactory.createProperty(BASE_URI + "procedureTypeError");
             Statement procedureTypeError = ResourceFactory.createStatement(subject, pteProp, ResourceFactory.createPlainLiteral(pte));
