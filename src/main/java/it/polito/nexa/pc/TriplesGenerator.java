@@ -32,7 +32,7 @@ public class TriplesGenerator {
     public static void main(String[] args) throws FileNotFoundException {
 
         DefaultJSONImporter dji = new DefaultJSONImporter();
-        /*
+
         // Generate labels of proposing structures
         String psJson = dji.getJSON("src/main/resources/proposingStructures.json", "FILE");
         PropStructLabelsTriplifier pslt = new PropStructLabelsTriplifier();
@@ -45,7 +45,7 @@ public class TriplesGenerator {
 
         // Generate sameas with SPCData
         SPCDataTriplifier st = new SPCDataTriplifier();
-        RDFforSameas(st, psJson, createBaseModel());*/
+        RDFforSameas(st, psJson, createBaseModel());
 
         // Generate public contracts data
         PublicContractsTriplifier pcTriplifier = new PublicContractsTriplifier();
@@ -65,7 +65,9 @@ public class TriplesGenerator {
             String value = itr.next().toString();
             Path path = Paths.get(value);
             String fileName = path.getFileName().toString();
-            if(!fileName.equals("stats.json") && !fileName.equals("proposingStructure.json") && !fileName.equals("downloadStats.json") && !fileName.contains("_index")){
+            if(!fileName.equals("stats.json") && !fileName.equals("proposingStructure.json")
+                                              && !fileName.equals("downloadStats.json")
+                                              && !fileName.contains("_index")){
                 String pcJson = dji.getJSON(value, "FILE");
                 List<Statement> pcStatements = pcTriplifier.triplifyJSON(pcJson);
                 pcModel.add(pcStatements);
@@ -85,7 +87,7 @@ public class TriplesGenerator {
         System.out.println("Time in minutes: "+ ((endTime-startTime)/1000)/60);
 
         /* Generate test data
-        String testJson = dji.getJSON("src/main/resources/bad-vatID.json", "FILE");
+        String testJson = dji.getJSON("src/main/resources/894c5d3ee240fd5c8163e1fceec4c92124fea5fe.json", "FILE");
         PublicContractsTriplifier pctest = new PublicContractsTriplifier();
         RDFforTestingData(pctest, testJson, createBaseModel());*/
     }
@@ -115,7 +117,7 @@ public class TriplesGenerator {
     }
 
     private static void RDFforProposingStructureLabels(PropStructLabelsTriplifier pslt, String inputJson, Model model, String output) throws FileNotFoundException {
-        System.out.println("Generate labels data...");
+        System.out.println("Generate data for businessEntities...");
         List<Statement> statements = pslt.triplifyJSON(inputJson);
         model.add(statements);
         publishRDF(output, model);
