@@ -34,6 +34,12 @@ public class PropStructLabelsTriplifier implements JSONTriplifier {
                                                                                     RDFS.label,
                                                                                     label);
                 results.add(proposingStructureLabel);
+
+                Statement vatID = ResourceFactory.createStatement(
+                        subject,
+                        ResourceFactory.createProperty("http://purl.org/goodrelations/v1#", "vatID"),
+                        ResourceFactory.createPlainLiteral(cleanString(getValue("vatId", record))));
+                results.add(vatID);
             }
         } catch (IOException e) {
             e.printStackTrace();
