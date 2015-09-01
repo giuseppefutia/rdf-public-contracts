@@ -3,10 +3,7 @@ package it.polito.nexa.pc.triplifiers;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.datatypes.xsd.impl.XSDDateType;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -641,6 +638,10 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             if(getValue("ruolo", value) != "") {
                 rl = ResourceFactory.createProperty(BASE_URI + "propertiesRole/" + getValue("ruolo", value));
                 role = ResourceFactory.createStatement(gr, rl, pt);
+                Literal rlabel = ResourceFactory.createLangLiteral(getValue("ruolo", value), "it");
+                Statement roleLabel = ResourceFactory.createStatement(rl, RDFS.label, rlabel);
+                results.add(roleLabel);
+
                 Statement isRoleSubproperty = ResourceFactory.createStatement(
                         rl,
                         RDFS.subPropertyOf,
@@ -746,7 +747,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 .replaceAll("-", "")
                 .replaceAll("\\.", "_")
                 .replaceAll("\\[", "")
-                .replaceAll("\\]","")
+                .replaceAll("\\]", "")
                 .replaceAll(",", "")
                 .replace(" ", "_")
                 .replace("/", "_")
