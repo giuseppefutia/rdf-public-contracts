@@ -243,12 +243,10 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             results.add(pt);
         }
 
-        if(getValue("tempiCompletamento", record) != ""){
+        if(record.get("tempiCompletamento") != null){
             JsonNode times = record.get("tempiCompletamento");
             RDFDatatype dateType = XSDDateType.XSDdate;
-
             if(times.get("dataInizio") != null) {
-
                 Statement startDate = ResourceFactory.createStatement(
                         subject,
                         ResourceFactory.createProperty("http://purl.org/procurement/public-contracts#", "startDate"),
