@@ -12,16 +12,14 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // This class creates triples of Italian public contracts
 
 public class PublicContractsTriplifier implements JSONTriplifier {
 
-    //private static String BASE_URI = "http://public-contracts.nexacenter.org/id/";
     private static String BASE_URI = "http://public-contracts.nexacenter.org/id/";
 
     /**
@@ -31,22 +29,13 @@ public class PublicContractsTriplifier implements JSONTriplifier {
      *
      */
     public List<Statement> triplifyJSON(String inputJSON) {
+
         List<Statement> results = new ArrayList<>();
 
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode rootNode = mapper.readValue(inputJSON, JsonNode.class);
-            JsonNode data = rootNode.get("data").get("lotto");
-
-            String year = getValue("annoRiferimento", rootNode.get("metadata"));
-            String urlFile = getValue("urlFile", rootNode.get("metadata"));
-
-            Map<String, String> controlID = new HashMap<>();
-
-            for (JsonNode record : data) {
-                results.addAll(createStatements(record, year, controlID, urlFile));
-            }
-
+            results.addAll(createStatements(rootNode));
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -58,17 +47,19 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
     /**
      * Create general statements from JSON produced using XML files of Italian public contracts.
-     * @param record The input JSON for creating CIG statements. The root node is "data": {},{}
-     * @param year Used for identifying the payment date of CIGs
-     * @param controlID For verifying if contracting authority resource is already created
+     * @param record The input JSON for creating CIG statements.
+     *
      * @return A list of Jena Statements
      *
      */
-    private List createStatements(JsonNode record, String year, Map controlID, String urlFile){ //XXX Update above comments
+    private List createStatements(JsonNode record){
         List<Statement> results = new ArrayList<>();
 
         String cig = "";
         String cigURI = "";
+        String year = getValue("annoRiferimento", record);
+        String processingDate = getValue("dataDiElaborazione", record);
+        JsonNode errors = record.get("errors");
 
         if(getValue("cig", record) != "")
             cig = getValue("cig", record); //XXX Use a hash if the value is undefined
@@ -78,57 +69,43 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             cigURI = cig;
         else cigURI = getValue("cigHash", record);
 
+        // Create resources for contract information
         Resource subject = ResourceFactory.createResource(BASE_URI + "public_contracts/" + cigURI);
 
+        // Create errors field for RDF
+        int errorIndex = 0;
 
-        if(getValue("strutturaProponente", record) != null) {
-
-            JsonNode contractingAutorities = record.get("strutturaProponente");
-
-            int i = 0;
-
-            while(contractingAutorities.get(i) != null){
-
-                JsonNode value = contractingAutorities.get(i);
-                String id = getValue("codiceFiscaleProp", value);
-
-                if(controlID.get(id) == null) {
-                    controlID.put(id, "found");
-
-                    Resource ca = ResourceFactory.createResource(BASE_URI + "businessEntities/" + cleanString(id));
-
-                    Statement businessEntity = ResourceFactory.createStatement(
-                            ca,
-                            RDF.type,
-                            ResourceFactory.createResource("http://purl.org/goodrelations/v1#BusinessEntity"));
-
-                    results.add(businessEntity);
-
-                }
-
-                Statement contractingAuthority = ResourceFactory.createStatement(
-                        subject,
-                        ResourceFactory.createProperty("http://purl.org/procurement/public-contracts#", "contractingAutority"),
-                        ResourceFactory.createResource(BASE_URI + "businessEntities/" + cleanString(id)));
-
-                results.add(contractingAuthority);
-
-                Statement cigLabel = ResourceFactory.createStatement(
-                        subject,
-                        RDFS.label,
-                        ResourceFactory.createLangLiteral(getValue("oggetto", record) + " - di " + getValue("denominazione", value), "it"));
-
-                results.add(cigLabel);
-
-                i++;
-            }
-
+        while(errors.get(errorIndex) != null){
+            Statement errorStatement = ResourceFactory.createStatement(
+                    subject,
+                    ResourceFactory.createProperty(BASE_URI + "properties/error"),
+                    ResourceFactory.createPlainLiteral(errors.get(errorIndex).toString())
+            );
+            results.add(errorStatement);
+            errorIndex++;
         }
+
+        if (processingDate != "") {
+            Statement pd = ResourceFactory.createStatement(
+                    subject,
+                    ResourceFactory.createProperty(BASE_URI + "properties/processingDate"),
+                    ResourceFactory.createPlainLiteral(processingDate)
+            );
+            results.add(pd);
+        }
+
+        Statement cigLabel = ResourceFactory.createStatement(
+                subject,
+                RDFS.label,
+                ResourceFactory.createLangLiteral(getValue("oggetto", record), "it"));
+                //ResourceFactory.createLangLiteral(getValue("oggetto", record) + " - di " + getValue("denominazione", value), "it"));
+
+        results.add(cigLabel);
 
         Statement url = ResourceFactory.createStatement(
                 subject,
                 DCTerms.source,
-                ResourceFactory.createPlainLiteral(urlFile));
+                ResourceFactory.createPlainLiteral(getValue("urlFile", record)));
 
         results.add(url);
 
@@ -162,7 +139,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
         results.add(description);
 
-        RDFDatatype priceType = XSDDateType.XSDdecimal;
+        RDFDatatype priceType = XSDDatatype.XSDfloat;
 
         Statement price = ResourceFactory.createStatement(
                 subject,
@@ -170,6 +147,16 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 ResourceFactory.createTypedLiteral(getValue("importoAggiudicazione", record), priceType));
 
         results.add(price);
+
+        if(getValue("importoAggiudicazioneOriginale", record) != null) {
+            Statement originalPrice = ResourceFactory.createStatement(
+                    subject,
+                    ResourceFactory.createProperty(BASE_URI + "properties/originalAgreedPrice"),
+                    ResourceFactory.createPlainLiteral(getValue("importoAggiudicazioneOriginale", record))
+            );
+
+            results.add(originalPrice);
+        }
 
         if(getValue("sceltaContraente", record) != "" ) {
             String procedureType = getValue("sceltaContraente", record);
@@ -181,7 +168,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
         if(getValue("sceltaContraenteOriginal", record) != "") { // This property tracks errors in the procedure type values
             String pte = getValue("sceltaContraenteOriginal", record);
-            Property pteProp = ResourceFactory.createProperty(BASE_URI + "procedureTypeError");
+            Property pteProp = ResourceFactory.createProperty(BASE_URI + "properties/procedureTypeError");
             Statement procedureTypeError = ResourceFactory.createStatement(subject, pteProp, ResourceFactory.createPlainLiteral(pte));
             results.add(procedureTypeError);
 
@@ -194,6 +181,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
         if(getValue("importoSommeLiquidate", record) != "") {
             Resource paymentType = ResourceFactory.createResource("http://reference.data.gov.uk/def/payment#Payment");
             Resource payment = ResourceFactory.createResource(BASE_URI + "payments/" + cleanString(cigURI) + "_" + year);
+
             Statement hasPayment = ResourceFactory.createStatement(
                     subject,
                     ResourceFactory.createProperty("http://reference.data.gov.uk/def/payment#payment"),
@@ -240,6 +228,15 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             results.add(pt);
         }
 
+        if(getValue("importoSommeLiquidateOriginal", record) != "") {
+            Statement originalPayment = ResourceFactory.createStatement(
+                    subject,
+                    ResourceFactory.createProperty(BASE_URI + "properties/originalAgreedPrice"),
+                    ResourceFactory.createPlainLiteral(getValue("importoSommeLiquidateOriginal", record))
+                    );
+            results.add(originalPayment);
+        }
+
         if(record.get("tempiCompletamento") != null){
             JsonNode times = record.get("tempiCompletamento");
             RDFDatatype dateType = XSDDateType.XSDdate;
@@ -260,19 +257,55 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 );
                 results.add(endDate);
             }
+
+            if(times.get("dataInizioOriginale") != null) {
+                Statement originalStartDate = ResourceFactory.createStatement(
+                        subject,
+                        ResourceFactory.createProperty(BASE_URI + "properties/originalStartDate"),
+                        ResourceFactory.createPlainLiteral(getValue("dataInizioOriginale", times))
+                );
+                results.add(originalStartDate);
+            }
+
+            if(times.get("dataUltimazioneOriginale") != null) {
+                Statement originalEndDate = ResourceFactory.createStatement(
+                        subject,
+                        ResourceFactory.createProperty(BASE_URI + "properties/originalEstimatedEndDate"),
+                        ResourceFactory.createPlainLiteral(getValue("dataUltimazioneOriginale", times))
+                );
+                results.add(originalEndDate);
+            }
         }
 
         if(getValue("aggiudicatari",record) != null) {
             JsonNode winners = record.get("aggiudicatari");
-            if (winners != null) // XXX
+            if (winners != null)
                 results.addAll(createGeneralWinners(winners, subject, cig, cigURI));
         }
 
         if(getValue("partecipanti",record) != null) {
             JsonNode participants = record.get("partecipanti");
-            if (participants != null) // XXX
+            if (participants != null)
                 results.addAll(createGeneralParticipants(participants, subject, cig, cigURI));
         }
+
+        // Create resources for contracting authorities
+
+        String contractingAuthorityId = cleanString(getValue("cfStrutturaProponenteANAC", record));
+        Resource contractingAuthorityResource = ResourceFactory.createResource(BASE_URI + "businessEntities/" + contractingAuthorityId);
+
+        Statement businessEntity = ResourceFactory.createStatement(
+                contractingAuthorityResource,
+                RDF.type,
+                ResourceFactory.createResource("http://purl.org/goodrelations/v1#BusinessEntity"));
+
+        results.add(businessEntity);
+
+        Statement contractingAuthority = ResourceFactory.createStatement(
+                subject,
+                ResourceFactory.createProperty("http://purl.org/procurement/public-contracts#", "contractingAutority"),
+                contractingAuthorityResource);
+        results.add(contractingAuthority);
 
         return results;
     }
@@ -310,6 +343,9 @@ public class PublicContractsTriplifier implements JSONTriplifier {
      * @return A list of Jena Statements
      *
      */
+
+    // TODO Probably this method could be removed
+
     private List createGeneralWinners(JsonNode record, Resource publicContract, String cig, String cigURI) {
         List<Statement> results = new ArrayList<>();
 
@@ -317,11 +353,11 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
         while(record.get(i) != null){
             JsonNode value = record.get(i);
-            if(getValue("type", value).equals("aggiudicatario")) {
+            if(getValue("type", value).equals("partecipante")) {
                 results.addAll(createParticipantStatements(record, value, publicContract, cig, cigURI, true));
             } else {
                 String groupID = getValue("groupHash", value);
-                results.addAll(createGroupStatements(value.get("aggiudicatarioRaggruppamento"), publicContract, groupID, cig, cigURI, true));
+                results.addAll(createGroupStatements(value.get("raggruppamento"), publicContract, groupID, cig, cigURI, true));
             }
             i++;
         }
@@ -432,6 +468,8 @@ public class PublicContractsTriplifier implements JSONTriplifier {
      */
     private List<Statement> createSingleParticipant(JsonNode value, Boolean hasNationality, Boolean isItalian, String idParticipant){
         List<Statement> results = new ArrayList<>();
+
+        // It is created with another script
 
         /*if (getValue("ragioneSociale", value) != ""){
             Statement participant = ResourceFactory.createStatement(
