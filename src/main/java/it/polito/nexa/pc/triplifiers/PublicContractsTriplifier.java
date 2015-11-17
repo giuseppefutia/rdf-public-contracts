@@ -12,7 +12,6 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -402,7 +401,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 ResourceFactory.createResource(BASE_URI + "tenders/" +
                         cleanString(cigURI + "_" + idParticipant)),
                 RDFS.label,
-                ResourceFactory.createLangLiteral("CIG: " + cig + " - Offerente: " + getValue("ragioneSociale", value), "it")); // XXX Use getValue(oggetto) reference
+                ResourceFactory.createLangLiteral("CIG: " + cig + " - Identificativo offerente: " + idParticipant, "it"));
 
         results.add(tender);
 
@@ -411,7 +410,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                     ResourceFactory.createResource(BASE_URI + "tenders/" +
                             cleanString(cigURI + "_" + idParticipant)),
                     RDFS.label,
-                    ResourceFactory.createLangLiteral("CIG: " + cig + " - Aggiudicatario:" + getValue("ragioneSociale", value), "it"));
+                    ResourceFactory.createLangLiteral("CIG: " + cig + " - Identificativo aggiudicatario:" + idParticipant, "it"));
 
             results.add(tenderWinner);
 
@@ -582,9 +581,25 @@ public class PublicContractsTriplifier implements JSONTriplifier {
         while (record.get(i) != null) {
             JsonNode value = record.get(i);
             if(getValue("ruolo", value).equals("02-MANDATARIA")) {
-                groupHead = getValue("ragioneSociale", value);
+                String idParticipant = "";
+                if(getValue("companyHash", value) != "") {
+                    idParticipant = getValue("companyHash", value);
+                } else if(getValue("codiceFiscale", value) != "") {
+                    idParticipant = getValue("codiceFiscale", value);
+                } else {
+                    idParticipant = getValue("identificativoFiscaleEstero", value);
+                }
+                groupHead = idParticipant;
             } else if(getValue("ruolo", value).equals("04-CAPOGRUPPO")) {
-                groupHead = getValue("ragioneSociale", value);
+                String idParticipant = "";
+                if(getValue("companyHash", value) != "") {
+                    idParticipant = getValue("companyHash", value);
+                } else if(getValue("codiceFiscale", value) != "") {
+                    idParticipant = getValue("codiceFiscale", value);
+                } else {
+                    idParticipant = getValue("identificativoFiscaleEstero", value);
+                }
+                groupHead = idParticipant;
             }
             i++;
         }
@@ -592,7 +607,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
         Statement  group = ResourceFactory.createStatement(
                 gr,
                 RDFS.label,
-                ResourceFactory.createLangLiteral("Raggruppamento con capogruppo/mandataria " + groupHead, "it"));
+                ResourceFactory.createLangLiteral("Raggruppamento con capogruppo/mandataria con identificavo " + groupHead, "it"));
 
         results.add(group);
 
@@ -614,7 +629,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             Statement tenderWinner = ResourceFactory.createStatement(
                     td,
                     RDFS.label,
-                    ResourceFactory.createLangLiteral("Raggruppamento aggiudicatario: capogruppo/mandataria " + groupHead, "it"));
+                    ResourceFactory.createLangLiteral("Raggruppamento aggiudicatario: capogruppo/mandataria con identificativo " + groupHead, "it"));
 
             results.add(tenderWinner);
 
@@ -629,7 +644,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
         Statement tenderLabel = ResourceFactory.createStatement(
                 td,
                 RDFS.label,
-                ResourceFactory.createLangLiteral("Raggruppamento partecipante: capogruppo/mandataria " + groupHead, "it"));
+                ResourceFactory.createLangLiteral("Raggruppamento partecipante: capogruppo/mandataria con identificatico" + groupHead, "it"));
 
         results.add(tenderLabel);
 
@@ -693,14 +708,13 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
             results.add(role);
 
-            if(getValue("ruoloOriginal", record) != "") { // This property tracks errors in the role values
-                String error = "Soggetto privo di ragione sociale ha il ruolo " + getValue("ruoloOriginal", record) + " non conforme";
-                if(getValue("ragioneSociale", record) != "") {
-                    error = "Il soggetto " + getValue("ragioneSociale", record) + " ha il ruolo " + getValue("ruoloOriginal", record) + " non conforme";
-                }
-                Property rleProp = ResourceFactory.createProperty(BASE_URI + "properties/roleError");
-                Statement roleError = ResourceFactory.createStatement(gr, rleProp, ResourceFactory.createPlainLiteral(error));
-                results.add(roleError);
+            if(getValue("ruoloOriginale", value) != "") { // This property tracks errors in the role values
+                Statement originalRole = ResourceFactory.createStatement(
+                        pt,
+                        ResourceFactory.createProperty(BASE_URI + "properties/originalRole"),
+                        ResourceFactory.createPlainLiteral(getValue("ruoloOriginal", value))
+                );
+                results.add(originalRole);
             }
 
             results.addAll(createSingleParticipant(value, hasNationality, isItalian, idParticipant));
