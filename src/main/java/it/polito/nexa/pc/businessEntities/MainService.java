@@ -39,7 +39,7 @@ public class MainService {
             String value = itr.next().toString();
             Path path = Paths.get(value);
             String fileName = path.getFileName().toString();
-            if(!fileName.equals("businessEntities.json") &&!fileName.equals("stats.json") && !fileName.equals("proposingStructure.json") 
+            if(!fileName.equals("vecchi_bandi/businessEntities.json") &&!fileName.equals("stats.json") && !fileName.equals("proposingStructure.json")
             		&& !fileName.equals("downloadInfo.json")&& !fileName.equals("downloadStats.json") && !fileName.contains("_index")){
                 String pcJson = dji.getJSON(value, "FILE");
                 companiesFromJson(pcJson); 
