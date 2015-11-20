@@ -27,20 +27,17 @@ public class PublicContractsTriplifier implements JSONTriplifier {
      * @return A list of Jena Statements
      *
      */
-    public List<Statement> triplifyJSON(String inputJSON) {
-
+    public List<Statement> triplifyJSON(String inputJSON, String pathJSON) {
         List<Statement> results = new ArrayList<>();
-
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode rootNode = mapper.readValue(inputJSON, JsonNode.class);
             results.addAll(createStatements(rootNode));
         } catch (Exception e){
+            System.out.println(pathJSON);
             e.printStackTrace();
         }
-
         results.addAll(createProcedureTypeStatements());
-
         return results;
     }
 
@@ -325,7 +322,8 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             JsonNode value = record.get(i);
             if(getValue("type", value).equals("partecipante")) {
                 results.addAll(createParticipantStatements(record, value, publicContract, cig, cigURI, false));
-            } else {
+            }
+            if(value.get("raggruppamento") != null){
                 String groupID = getValue("groupHash", value);
                 results.addAll(createGroupStatements(value.get("raggruppamento"), publicContract, groupID, cig, cigURI, false));
             }
@@ -354,9 +352,10 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             JsonNode value = record.get(i);
             if(getValue("type", value).equals("partecipante")) {
                 results.addAll(createParticipantStatements(record, value, publicContract, cig, cigURI, true));
-            } else {
+            }
+            if(value.get("raggruppamento") != null){
                 String groupID = getValue("groupHash", value);
-                results.addAll(createGroupStatements(value.get("raggruppamento"), publicContract, groupID, cig, cigURI, true));
+                results.addAll(createGroupStatements(value.get("raggruppamento"), publicContract, groupID, cig, cigURI, false));
             }
             i++;
         }
@@ -578,6 +577,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
         // Get head of the group to clarify the label of the group
         String groupHead = "indefinito";
         int i = 0;
+
         while (record.get(i) != null) {
             JsonNode value = record.get(i);
             if(getValue("ruolo", value).equals("02-MANDATARIA")) {
