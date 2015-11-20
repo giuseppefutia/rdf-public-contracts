@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface JSONTriplifier {
 
-    public List<Statement> triplifyJSON(String inputJSON);
+    public List<Statement> triplifyJSON(String inputJSON, String pathJSON);
 
     public String cleanString(String s);
 

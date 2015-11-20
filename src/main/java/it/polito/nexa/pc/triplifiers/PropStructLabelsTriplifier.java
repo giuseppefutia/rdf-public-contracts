@@ -17,7 +17,7 @@ public class PropStructLabelsTriplifier implements JSONTriplifier {
     //private static String BASE_URI = "http://localhost/id/"; Use it for your local graph
     private static String BASE_URI = "http://public-contracts.nexacenter.org/id/";
 
-    public List<Statement> triplifyJSON(String inputJSON) {
+    public List<Statement> triplifyJSON(String inputJSON, String pathJSON) {
 
         List<Statement> results = new ArrayList<>();
 
