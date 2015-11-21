@@ -224,11 +224,11 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             results.add(pt);
         }
 
-        if(getValue("importoSommeLiquidateOriginal", record) != "") {
+        if(getValue("importoSommeLiquidateOriginale", record) != "") {
             Statement originalPayment = ResourceFactory.createStatement(
                     subject,
-                    ResourceFactory.createProperty(BASE_URI + "properties/originalAgreedPrice"),
-                    ResourceFactory.createPlainLiteral(getValue("importoSommeLiquidateOriginal", record))
+                    ResourceFactory.createProperty(BASE_URI + "properties/originalPayment"),
+                    ResourceFactory.createPlainLiteral(getValue("importoSommeLiquidateOriginale", record))
                     );
             results.add(originalPayment);
         }
