@@ -137,19 +137,19 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
         RDFDatatype priceType = XSDDatatype.XSDfloat;
 
-        Statement price = ResourceFactory.createStatement(
-                subject,
-                ResourceFactory.createProperty("http://purl.org/procurement/public-contracts#", "agreedPrice"),
-                ResourceFactory.createTypedLiteral(getValue("importoAggiudicazione", record), priceType));
-
-        results.add(price);
+        if(getValue("importoAggiudicazione", record) != null) {
+            Statement price = ResourceFactory.createStatement(
+                    subject,
+                    ResourceFactory.createProperty("http://purl.org/procurement/public-contracts#", "agreedPrice"),
+                    ResourceFactory.createTypedLiteral(getValue("importoAggiudicazione", record), priceType));
+            results.add(price);
+        }
 
         if(getValue("importoAggiudicazioneOriginale", record) != null) {
             Statement originalPrice = ResourceFactory.createStatement(
                     subject,
                     ResourceFactory.createProperty(BASE_URI + "properties/originalAgreedPrice"),
-                    ResourceFactory.createPlainLiteral(getValue("importoAggiudicazioneOriginale", record))
-            );
+                    ResourceFactory.createPlainLiteral(getValue("importoAggiudicazioneOriginale", record)));
 
             results.add(originalPrice);
         }
