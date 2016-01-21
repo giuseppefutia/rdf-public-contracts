@@ -520,6 +520,14 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 results.add(vatID);
             }
         }
+        if(getValue("codiceFiscaleOriginale", value) != "") {
+            Statement vatID = ResourceFactory.createStatement(
+                    ResourceFactory.createResource(BASE_URI + "businessEntities/" +
+                            cleanString(idParticipant)),
+                    ResourceFactory.createProperty("http://purl.org/goodrelations/v1#", "vatID"),
+                    ResourceFactory.createPlainLiteral(getValue("codiceFiscaleOriginale", value)));
+            results.add(vatID);
+        }
 
         Statement grBusinessEntity = ResourceFactory.createStatement(
                 ResourceFactory.createResource(BASE_URI + "businessEntities/" +
