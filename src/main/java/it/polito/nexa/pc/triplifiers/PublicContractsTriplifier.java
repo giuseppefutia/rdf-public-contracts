@@ -383,12 +383,12 @@ public class PublicContractsTriplifier implements JSONTriplifier {
 
         if(getValue("companyHash", value) != "") {
             idParticipant = getValue("companyHash", value);
-            if(getValue("codiceFiscale", value) == "" && getValue("identificativoFiscaleEstero", value) == "") {
+            if(getValue("identificativo", value) == "" && getValue("identificativoFiscaleEstero", value) == "") {
                 hasNationality = false;
                 isItalian = false;
             }
-        } else if(getValue("codiceFiscale", value) != "") {
-            idParticipant = getValue("codiceFiscale", value);
+        } else if(getValue("identificativo", value) != "") {
+            idParticipant = getValue("identificativo", value);
             isItalian = true;
         } else {
             idParticipant = getValue("identificativoFiscaleEstero", value);
@@ -456,7 +456,7 @@ public class PublicContractsTriplifier implements JSONTriplifier {
      *
      *              {
      *               "ragioneSociale": "Gruppo Biesse Sistemi S.r.l.",
-     *               "codiceFiscale": "01015600057",
+     *               "identificativo": "01015600057",
      *               "type": "partecipante"
      *               }
      *
@@ -504,12 +504,12 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             results.add(notValidLabel);
         } 
         else {
-            if (getValue("codiceFiscale", value) != "") {
+            if (getValue("identificativo", value) != "") {
                 Statement vatID = ResourceFactory.createStatement(
                         ResourceFactory.createResource(BASE_URI + "businessEntities/" +
                                 cleanString(idParticipant)),
                         ResourceFactory.createProperty("http://purl.org/goodrelations/v1#", "vatID"),
-                        ResourceFactory.createPlainLiteral(getValue("codiceFiscale", value)));
+                        ResourceFactory.createPlainLiteral(getValue("identificativo", value)));
                 results.add(vatID);
             } else if (getValue("identificativoFiscaleEstero", value) != "") {
                 Statement vatID = ResourceFactory.createStatement(
@@ -520,12 +520,12 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 results.add(vatID);
             }
         }
-        if(getValue("codiceFiscaleOriginale", value) != "") {
+        if(getValue("identificativoOriginale", value) != "") {
             Statement vatID = ResourceFactory.createStatement(
                     ResourceFactory.createResource(BASE_URI + "businessEntities/" +
                             cleanString(idParticipant)),
-                    ResourceFactory.createProperty("http://purl.org/goodrelations/v1#", "vatID"),
-                    ResourceFactory.createPlainLiteral(getValue("codiceFiscaleOriginale", value)));
+                    ResourceFactory.createProperty(BASE_URI + "properties/OriginalIdentifier"),
+                    ResourceFactory.createPlainLiteral(getValue("identificativoOriginale", value)));
             results.add(vatID);
         }
 
@@ -549,12 +549,12 @@ public class PublicContractsTriplifier implements JSONTriplifier {
      *                  "raggruppamento": [
      *                      {
      *                          "ragioneSociale": "TECNONET S.p.A. ",
-     *                          "codiceFiscale": "04187501004",
+     *                          "identificativo": "04187501004",
      *                          "ruolo": "02-MANDATARIA"
      *                      },
      *                      {
      *                          "ragioneSociale": "Gruppo Easy Telecomuinicazioni S.r.l.",
-     *                          "codiceFiscale": "10328750012",
+     *                          "identificativo": "10328750012",
      *                          "ruolo": "01-MANDANTE"
      *                      }
      *                  ]
@@ -592,8 +592,8 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 String idParticipant = "";
                 if(getValue("companyHash", value) != "") {
                     idParticipant = getValue("companyHash", value);
-                } else if(getValue("codiceFiscale", value) != "") {
-                    idParticipant = getValue("codiceFiscale", value);
+                } else if(getValue("identificativo", value) != "") {
+                    idParticipant = getValue("identificativo", value);
                 } else {
                     idParticipant = getValue("identificativoFiscaleEstero", value);
                 }
@@ -602,8 +602,8 @@ public class PublicContractsTriplifier implements JSONTriplifier {
                 String idParticipant = "";
                 if(getValue("companyHash", value) != "") {
                     idParticipant = getValue("companyHash", value);
-                } else if(getValue("codiceFiscale", value) != "") {
-                    idParticipant = getValue("codiceFiscale", value);
+                } else if(getValue("identificativo", value) != "") {
+                    idParticipant = getValue("identificativo", value);
                 } else {
                     idParticipant = getValue("identificativoFiscaleEstero", value);
                 }
@@ -680,12 +680,12 @@ public class PublicContractsTriplifier implements JSONTriplifier {
             Boolean hasNationality = true;
             if(getValue("companyHash", value) != "") {
                 idParticipant = getValue("companyHash", value);
-                if(getValue("codiceFiscale", value) == "" && getValue("identificativoFiscaleEstero", value) == "") {
+                if(getValue("identificativo", value) == "" && getValue("identificativoFiscaleEstero", value) == "") {
                     hasNationality = false;
                     isItalian = false;
                 }
-            } else if(getValue("codiceFiscale", value) != "") {
-                idParticipant = getValue("codiceFiscale", value);
+            } else if(getValue("identificativo", value) != "") {
+                idParticipant = getValue("cidentificativo", value);
                 isItalian = true;
             } else {
                 idParticipant = getValue("identificativoFiscaleEstero", value);
